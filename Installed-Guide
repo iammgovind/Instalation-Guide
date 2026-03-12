@@ -1,0 +1,94 @@
+Sonarqube (9000):
+Set custom tcp 9000
+
+1.ssh -i keyname.pem ubuntu@[PublicIP_of_EC2Server]
+2.sudo apt update
+3.sudo apt upgrade -y
+4.sudo apt install -y openjdk-17-jdk
+5.java -version
+6.sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" /etc/apt/sources.list.d/pgdg.list'
+7.wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O - | sudo apt-key add -
+8.sudo apt install postgresql postgresql-contrib -y
+9.sudo systemctl enable postgresql
+10.sudo systemctl start postgresql
+11.sudo systemctl status postgresql
+12.psql --version
+13.sudo -i -u postgres
+14.createuser ddsonar
+15.psql
+16.ALTER USER ddsonar WITH ENCRYPTED password 'mwd#2%#!!#%rgs';
+17.CREATE DATABASE ddsonarqube OWNER ddsonar;
+18.GRANT ALL PRIVILEGES ON DATABASE ddsonarqube to ddsonar;
+19.\l
+20.\q
+21.exit
+22.sudo apt install zip -y
+23.sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-25.2.0.102705.zip
+24.sudo unzip sonarqube-25.2.0.102705.zip
+25.sudo mv sonarqube-25.2.0.102705 sonarqube
+26.sudo mv sonarqube /opt/
+27.sudo groupadd ddsonar
+28.sudo useradd -d /opt/sonarqube -g ddsonar ddsonar
+29.sudo chown ddsonar:ddsonar /opt/sonarqube -R
+30.sudo nano /opt/sonarqube/conf/sonar.properties
+31.Uncomment and add : 
+sonar.jdbc.username=ddsonar
+sonar.jdbc.password=mwd#2%#!!#%rgs
+sonar.jdbc.url=jdbc:postgresql://localhost:5432/ddsonarqube
+32.sudo nano /opt/sonarqube/bin/linux-x86-64/sonar.sh
+Under bin bash, add RUN_AS_USER=ddsonar
+33.sudo nano /etc/systemd/system/sonar.service
+[Unit]
+Description=SonarQube service
+After=syslog.target network.target
+[Service]
+Type=forking
+ExecStart=/opt/sonarqube/bin/linux-x86-64/sonar.sh start
+ExecStop=/opt/sonarqube/bin/linux-x86-64/sonar.sh stop
+User=ddsonar
+Group=ddsonar
+Restart=always
+LimitNOFILE=65536
+LimitNPROC=4096
+[Install]
+WantedBy=multi-user.target
+34.sudo systemctl enable sonar
+35.sudo systemctl start sonar
+36.sudo systemctl status sonar
+37.sudo nano /etc/sysctl.conf
+vm.max_map_count=262144
+fs.file-max=65536
+ulimit -n 65536
+ulimit -u 4096
+
+Jenkins (8080):
+Set custom tcp 8080
+1.sudo su
+2.wget https://raw.githubusercontent.com/akshu20791/Deployment-script/refs/heads/main/jenkins.sh
+3.ls
+4.chmod 700 jenkins.sh
+5../jenkins.sh
+
+Tools: Maven
+Plugins:
+●Pipeline
+●SonarQube Scanner
+●Maven Integration
+●Email Extension
+●SSH Agent
+
+
+Tomcat (9090):
+Set custom tcp 9090
+1.sudo su
+2.wget https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.115/bin/apache-tomcat-9.0.115.zip
+3.apt install unzip -y
+4.unzip apache-tomcat-9.0.115.zip
+5.cd apache-tomcat-9.0.115
+6.cd config
+7.vi server.xml
+Go to Connector port → change 8080 to 9090
+8.cd ..
+9.cd bin
+10.chmod +x *.sh
+11../startup.sh
